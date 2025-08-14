@@ -1,0 +1,1934 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>СМЗ.РФ - Рабочие и спецтехника</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* === БАЗОВЫЕ СТИЛИ === */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            color: white;
+            overflow: hidden;
+            background: black;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .background-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -2;
+        }
+        /* === Отображение города === */
+        .selected-city {
+            margin-top: 12px;
+            font-size: 16px;
+            color: #fff;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        #changeCityButton {
+            background: none;
+            border: none;
+            color: white;
+            font-weight: bold;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 6px 10px;
+            border-radius: 6px;
+        }
+        /* === СЕТКА ПЛИТОК === */
+        .grid-container {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            width: 90%;
+            max-width: 400px;
+            z-index: 10;
+        }
+        .grid-row {
+            display: flex;
+            width: 100%;
+            gap: 12px;
+        }
+        .tile-btn {
+            flex: 1;
+            color: #333;
+            background: #e0d6c8;
+            border: 2px solid #c0b0a0;
+            padding: 16px 8px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-shadow: none;
+        }
+        .tile-btn::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .tile-btn span {
+            position: relative;
+            z-index: 1;
+            display: block;
+        }
+        .tile-btn small {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+        .tile-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+        }
+        /* === НАВИГАЦИЯ === */
+        .navigation {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(216, 201, 183, 0.95);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            z-index: 50;
+            backdrop-filter: blur(10px);
+            border-top: 1px solid #c0b0a0;
+        }
+        .nav-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            background: #f5f0e6;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+        .nav-btn span {
+            font-size: 13px;
+            color: #5a4a3a;
+        }
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            background: #e8dccf;
+        }
+        /* === Модальные окна === */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 300;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal.active {
+            display: flex;
+            opacity: 1;
+            pointer-events: all;
+        }
+        .modal-content {
+            background: #d8c9b7;
+            border: 2px solid #c0b0a0;
+            border-radius: 16px;
+            padding: 20px;
+            width: 90%;
+            max-width: 420px;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            color: #333;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal.active .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+        .modal-title {
+            font-size: 20px;
+            margin-bottom: 16px;
+            color: #5a4a3a;
+            text-align: center;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        .search-container {
+            width: 90%;
+            position: relative;
+            margin-bottom: 12px;
+        }
+        .search-container input {
+            width: 100%;
+            padding: 10px 10px 10px 36px;
+            border: 1px solid #c0b0a0;
+            border-radius: 8px;
+            font-size: 15px;
+            background: #e8dccf;
+            color: #333;
+            outline: none;
+        }
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #7d6b59;
+            font-size: 16px;
+            pointer-events: none;
+        }
+        .modal-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .modal-button {
+            color: #5a4a3a;
+            border: 2px solid #5a4a3a;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            background: #f5f0e6;
+            width: 90%;
+            max-width: 300px;
+            margin: 8px 0;
+            transition: all 0.3s ease;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        .modal-button:hover {
+            background: #e0d6c8;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+        .close-modal {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: 24px;
+            color: #5a4a3a;
+            cursor: pointer;
+            background: none;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        /* === СТРАНИЦЫ (скрыты по умолчанию) === */
+        #authModal, #profilePage, #requestFormPage, #takeOrderPage,
+        #myRequestsPage, #machineryFormPage, #toolsFormPage, #chatPage {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            height: 100vh;
+            background: #d8c9b7;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 200;
+            padding: 20px 16px;
+            overflow-y: auto;
+            color: #333;
+        }
+        #buttonContainer {
+             display: none; /* Главная страница тоже скрыта по умолчанию */
+        }
+        /* === ФОРМА АВТОРИЗАЦИИ === */
+        .auth-header {
+            font-size: 24px;
+            color: #5a4a3a;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        .form-group {
+            width: 90%;
+            max-width: 400px;
+            margin-bottom: 16px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #7d6b59;
+            font-size: 14px;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #c0b0a0;
+            border-radius: 8px;
+            background: #e8dccf;
+            color: #333;
+            font-size: 16px;
+        }
+        .auth-button {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            width: 90%;
+            max-width: 400px;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        .auth-button:hover {
+            background: #43a047;
+            transform: translateY(-2px);
+        }
+        /* === СТРАНИЦА: ПРОФИЛЬ === */
+        .profile-header {
+            font-size: 20px;
+            color: #5a4a3a;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        .profile-card {
+            background: #e8dccf;
+            border: 1px solid #c0b0a0;
+            border-radius: 12px;
+            padding: 16px;
+            width: 90%;
+            max-width: 400px;
+            margin-bottom: 16px;
+            color: #333;
+            text-align: left;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .profile-card strong {
+            color: #7d6b59;
+        }
+        .profile-button {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            width: 90%;
+            max-width: 400px;
+            margin-top: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .profile-button:hover {
+            background: #43a047;
+        }
+        .logout-button {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            width: 90%;
+            max-width: 400px;
+            margin-top: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .logout-button:hover {
+            background: #d32f2f;
+        }
+        /* === Дополнительные поля профиля === */
+        .profile-section {
+            background: #e8dccf;
+            border: 1px solid #c0b0a0;
+            border-radius: 12px;
+            padding: 16px;
+            width: 90%;
+            max-width: 400px;
+            margin-bottom: 16px;
+            color: #333;
+            text-align: left;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+        .profile-section textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #c0b0a0;
+            border-radius: 8px;
+            background: #f5f0e6;
+            color: #333;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 80px;
+        }
+        /* === Информация о подписке === */
+        .subscription-info {
+            background: #e8dccf;
+            border: 1px solid #c0b0a0;
+            border-radius: 12px;
+            padding: 16px;
+            width: 90%;
+            max-width: 400px;
+            margin-bottom: 16px;
+            color: #333;
+            text-align: left;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .subscription-info h3 {
+            color: #5a4a3a;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .subscription-status {
+            font-weight: bold;
+            color: #d4380d;
+        }
+        .subscription-status.active {
+            color: #4caf50;
+        }
+        .subscription-button {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+        .subscription-button:hover {
+            background: #43a047;
+        }
+        .subscription-button:disabled {
+            background-color: #a5d6a7;
+            cursor: not-allowed;
+        }
+        /* === ФОРМА СОЗДАНИЯ ЗАЯВКИ === */
+        .form-container {
+            background: #e8dccf;
+            border: 1px solid #c0b0a0;
+            border-radius: 12px;
+            padding: 20px;
+            width: 90%;
+            max-width: 500px;
+            margin: 0 auto;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .form-title {
+            text-align: center;
+            color: #5a4a3a;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+        .submit-button {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        .submit-button:hover {
+            background: #43a047;
+            transform: translateY(-2px);
+        }
+        .back-button {
+            margin-top: 20px;
+            color: #7d6b59;
+            font-size: 15px;
+            text-decoration: underline;
+            cursor: pointer;
+            display: block;
+            text-align: center;
+        }
+        /* === СТРАНИЦА: ВЗЯТЬ ЗАКАЗ / МОИ ЗАЯВКИ === */
+        .orders-header, .requests-header {
+            text-align: center;
+            color: #5a4a3a;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        .orders-list {
+            width: 90%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .order-card, .request-card {
+            background: #e8dccf;
+            border: 1px solid #c0b0a0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            color: #333;
+        }
+        .order-card strong, .request-card strong {
+            color: #5a4a3a;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        .order-card div, .request-card div {
+            margin-bottom: 4px;
+            font-size: 14px;
+            color: #7d6b59;
+            word-wrap: break-word;
+        }
+        .order-card .subscription-notice {
+            margin-top: 8px;
+            padding: 8px;
+            background-color: #f5e4cc;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #8c6c46;
+            border: 1px dashed #c0b0a0;
+        }
+        .take-order-btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .take-order-btn:hover {
+            background: #43a047;
+        }
+        .no-orders {
+            text-align: center;
+            color: #7d6b59;
+            padding: 20px;
+        }
+        .request-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            justify-content: flex-end;
+        }
+        .request-actions button {
+            padding: 6px 10px;
+            font-size: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+        }
+        .request-actions .view-btn { background: #4caf50; color: white; }
+        .request-actions .edit-btn { background: #2196f3; color: white; }
+        .request-actions .delete-btn { background: #f44336; color: white; }
+        /* === ФОРМА АРЕНДЫ ИНСТРУМЕНТА === */
+        .tool-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background: #e8dccf;
+            border: 1px solid #c0b0a0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .tool-item button {
+            background: #d4380d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .tool-item input {
+            width: 60px;
+            padding: 5px;
+            border: 1px solid #c0b0a0;
+            border-radius: 5px;
+            background: #f5f0e6;
+            color: #333;
+            text-align: center;
+        }
+        /* === Модальное окно выбора техники === */
+        .machinery-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 300;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .machinery-modal.active {
+            display: flex;
+            opacity: 1;
+            pointer-events: all;
+        }
+        .machinery-modal-content {
+            background: #d8c9b7;
+            border: 2px solid #c0b0a0;
+            border-radius: 16px;
+            padding: 20px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        .machinery-category {
+            margin-bottom: 20px;
+        }
+        .machinery-category-header {
+            font-size: 18px;
+            color: #5a4a3a;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #c0b0a0;
+            cursor: pointer;
+            user-select: none;
+        }
+        .machinery-category-items {
+            display: none;
+            padding-left: 15px;
+        }
+        .machinery-category-items.active {
+            display: block;
+        }
+        .machinery-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #c0b0a0;
+        }
+        .machinery-item:last-child {
+            border-bottom: none;
+        }
+        .machinery-item input {
+            margin-right: 10px;
+        }
+        .edit-machinery-btn {
+            background: #5a4a3a;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .edit-machinery-btn:hover {
+            background: #7d6b59;
+        }
+        /* === СТРАНИЦА: ЧАТ === */
+        .chat-header {
+            text-align: center;
+            color: #5a4a3a;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        .messages-container {
+            flex: 1;
+            background: #e8dccf;
+            border: 1px solid #c0b0a0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            overflow-y: auto;
+            max-height: 60vh;
+        }
+        .message {
+            margin-bottom: 12px;
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+        .message.sent {
+            background: #4caf50;
+            color: white;
+            margin-left: auto;
+        }
+        .message.received {
+            background: #7d6b59;
+            color: white;
+            margin-right: auto;
+        }
+        .message-input-container {
+            display: flex;
+            gap: 10px;
+        }
+        .message-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #c0b0a0;
+            border-radius: 8px;
+            background: #f5f0e6;
+            color: #333;
+            font-size: 16px;
+        }
+        .send-button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .send-button:hover {
+            background: #1976d2;
+        }
+        /* === Адаптивность === */
+        @media (max-width: 480px) {
+            .grid-container { width: 95%; gap: 10px; }
+            .tile-btn { padding: 14px 6px; font-size: 14px; min-height: 70px; }
+            .tile-btn small { font-size: 11px; }
+            .navigation { padding: 8px 0; }
+            .nav-btn { padding: 6px 12px; }
+            .nav-btn span { font-size: 12px; }
+        }
+        @media (max-width: 360px) {
+            .tile-btn { padding: 12px 4px; font-size: 13px; min-height: 65px; }
+            .tile-btn small { font-size: 10px; }
+            .form-group input, .form-group select, .form-group textarea { padding: 10px; font-size: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <video autoplay muted loop class="background-video">
+        <source src="https://telegram.org/file/8111409990/10b37f3868/240978" type="video/mp4">
+        Ваш браузер не поддерживает видео.
+    </video>
+    <div class="selected-city">
+        <span>Город: <span id="cityName">Не выбран</span></span>
+        <button id="changeCityButton">Изменить</button>
+    </div>
+    <div class="grid-container" id="buttonContainer">
+        <div class="grid-row">
+            <button type="button" class="tile-btn" id="masterButton">
+                <span>ВЗЯТЬ ЗАКАЗ</span><small>доступные заявки в вашем городе</small>
+            </button>
+            <button type="button" class="tile-btn" id="machineryButton">
+                <span>АРЕНДА СПЕЦТЕХНИКИ</span><small>взять в аренду в вашем городе</small>
+            </button>
+        </div>
+        <div class="grid-row">
+            <button type="button" class="tile-btn" id="toolsButton">
+                <span>АРЕНДА ИНСТРУМЕНТА</span><small>дрели, перфораторы и др.</small>
+            </button>
+            <button type="button" class="tile-btn" id="sellMaterialsButton">
+                <span>ПРОДАТЬ МАТЕРИАЛЫ</span><small>остатки, либо новые</small>
+            </button>
+        </div>
+        <div class="grid-row">
+            <button type="button" class="tile-btn" id="marketplaceButton">
+                <span>ДОСКА ОБЪЯВЛЕНИЙ</span><small>купить/продать "с рук"</small>
+            </button>
+            <button type="button" class="tile-btn" id="profileButton">
+                <span>ЛИЧНЫЙ КАБИНЕТ</span><small>профиль и настройки</small>
+            </button>
+        </div>
+    </div>
+    <div class="navigation">
+        <button class="nav-btn" id="navMaster"><i class="fas fa-hammer"></i><span>Заказы</span></button>
+        <button class="nav-btn" id="navCreate"><i class="fas fa-plus-circle"></i><span>Создать</span></button>
+        <button class="nav-btn" id="navProfile"><i class="fas fa-user"></i><span>Профиль</span></button>
+        <button class="nav-btn" id="navSubscription"><i class="fas fa-crown"></i><span>Подписка</span></button>
+    </div>
+    <div class="modal" id="cityModal">
+        <div class="modal-content">
+            <button class="close-modal">&times;</button>
+            <h2 class="modal-title">Выберите ваш город</h2>
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="citySearch" placeholder="Начните вводить название города...">
+            </div>
+            <div class="modal-buttons" id="cityButtons"></div>
+        </div>
+    </div>
+    <div id="authModal">
+        <h2 class="auth-header">Добро пожаловать!</h2>
+        <form id="authForm" class="form-container">
+            <div class="form-group">
+                <label for="userType">Выберите тип пользователя:</label>
+                <select id="userType" required>
+                    <option value="">Выберите...</option>
+                    <option value="ИСПОЛНИТЕЛЬ">ИСПОЛНИТЕЛЬ (мастер, бригада)</option>
+                    <option value="ЗАКАЗЧИК">ЗАКАЗЧИК (нужны работы)</option>
+                    <option value="ВЛАДЕЛЕЦ СПЕЦТЕХНИКИ">ВЛАДЕЛЕЦ СПЕЦТЕХНИКИ</option>
+                    <option value="ПРОДАВЕЦ - МАГАЗИН">ПРОДАВЕЦ - МАГАЗИН</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="userName">Ваше имя:</label>
+                <input type="text" id="userName" placeholder="Введите ваше имя" required>
+            </div>
+            <div class="form-group">
+                <label for="userPhone">Номер телефона:</label>
+                <input type="tel" id="userPhone" placeholder="+7 (999) 999-99-99" required>
+            </div>
+            <button type="submit" class="auth-button">ВОЙТИ</button>
+        </form>
+    </div>
+    <div id="profilePage">
+        <h2 class="profile-header">Ваш профиль</h2>
+        <div class="profile-card">
+            <div><strong>Тип пользователя:</strong> <span id="profileType"></span></div>
+            <div><strong>Имя:</strong> <span id="profileName"></span></div>
+            <div><strong>Телефон:</strong> <span id="profilePhone"></span></div>
+            <div><strong>Рейтинг:</strong> <span id="profileRating">Загрузка...</span></div>
+            <div id="profileSpecializationDisplay" style="margin-top: 10px; display: none;">
+                <div style="color: #7d6b59; font-size: 14px; margin-bottom: 6px;">Специализация (исполнитель)</div>
+                <div id="profileSpecialization" style="padding: 10px; border: 1px solid #c0b0a0; border-radius: 8px; background: #f0e6d2;">Не указана</div>
+            </div>
+        </div>
+        <div class="form-group" id="specializationGroup" style="width: 90%; max-width: 400px; display: none;">
+            <label for="profileSpecializationSelect">Изменить специализацию:</label>
+            <select id="profileSpecializationSelect" style="width: 100%; padding: 10px; border: 1px solid #c0b0a0; border-radius: 8px; background: #e8dccf; color: #333;"></select>
+            <button type="button" id="saveSpecialization" class="profile-button" style="margin-top: 10px;">Сохранить</button>
+        </div>
+        <div class="profile-section" id="executorProfileFields">
+            <h3>Информация об исполнителе</h3>
+            <div class="form-group">
+                <label for="executorAbout">О себе:</label>
+                <textarea id="executorAbout" placeholder="Расскажите о себе, опыте, образовании..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="executorSkills">Специализация и навыки:</label>
+                <textarea id="executorSkills" placeholder="Укажите ваши специализации и ключевые навыки..."></textarea>
+            </div>
+            <button class="profile-button" id="saveExecutorInfo">Сохранить информацию</button>
+        </div>
+        <div class="profile-section" id="shopProfileFields">
+            <h3>Информация о магазине</h3>
+            <div class="form-group">
+                <label for="shopContacts">Контакты магазина:</label>
+                <textarea id="shopContacts" placeholder="Адрес, телефон, email, сайт..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="shopLocation">Местоположение:</label>
+                <input type="text" id="shopLocation" placeholder="Город, район, метро...">
+            </div>
+            <div class="form-group">
+                <label for="shopAssortment">Ассортимент товаров/услуг:</label>
+                <textarea id="shopAssortment" placeholder="Опишите ваш ассортимент..."></textarea>
+            </div>
+            <button class="profile-button" id="saveShopInfo">Сохранить информацию</button>
+        </div>
+        <div class="profile-section" id="ownerProfileFields">
+            <h3>Ваша спецтехника</h3>
+            <div class="form-group">
+                <label>Выберите технику, которой владеете:</label>
+                <button class="profile-button" id="openMachineryModal">Выбрать технику</button>
+            </div>
+            <div class="selected-machinery" id="selectedMachineryDisplay"></div>
+            <button class="profile-button" id="saveMachinery">Сохранить технику</button>
+        </div>
+        <div class="subscription-info">
+            <h3>Подписка "Профи"</h3>
+            <div>Статус: <span id="subscriptionStatus" class="subscription-status">Не активна</span></div>
+            <div>Срок действия: <span id="subscriptionExpiry">-</span></div>
+            <button class="subscription-button" id="subscriptionButton">Оформить подписку</button>
+        </div>
+        <button class="profile-button" id="myRequestsButton">Мои заявки</button>
+        <button class="logout-button" id="logoutButton">ВЫЙТИ</button>
+        <a href="#" class="back-button" id="backToMain">← Назад</a>
+    </div>
+    <div id="requestFormPage">
+        <div class="form-container">
+            <h2 class="form-title">Создать заявку</h2>
+            <form id="requestForm">
+                <div class="form-group"><label for="requestName">Ваше имя:</label><input type="text" id="requestName" required></div>
+                <div class="form-group"><label for="requestPhone">Номер телефона:</label><input type="tel" id="requestPhone" required></div>
+                <div class="form-group"><label for="requestCity">Город:</label><input type="text" id="requestCity" required></div>
+                <div class="form-group">
+                    <label for="requestType">Тип заявки:</label>
+                    <select id="requestType" required>
+                        <option value="">Выберите тип</option>
+                        <option value="Работы">Работы (найти мастера)</option>
+                        <option value="Аренда спецтехники">Аренда спецтехники</option>
+                        <option value="Аренда инструмента">Аренда инструмента</option>
+                    </select>
+                </div>
+                <div id="workFields" style="display: none;">
+                    <div class="form-group"><label for="workType">Тип работ:</label><select id="workType" required></select></div>
+                    <div class="checkbox-group"><input type="checkbox" id="visitCheckbox"><label for="visitCheckbox">Выезд мастера</label></div>
+                    <div class="form-group" id="addressField" style="display: none;"><label for="workAddress">Адрес выполнения работ:</label><input type="text" id="workAddress" placeholder="Укажите адрес" required></div>
+                </div>
+                <div id="machineryFields" style="display: none;">
+                    <div class="form-group"><label for="machineryType">Тип спецтехники:</label><select id="machineryType" required></select></div>
+                    <div class="checkbox-group"><input type="checkbox" id="nearbyCheckbox"><label for="nearbyCheckbox">Искать ближайшую технику</label></div>
+                    <div class="checkbox-group"><input type="checkbox" id="minOrderCheckbox"><label for="minOrderCheckbox">Минимальный заказ (4 часа)</label></div>
+                    <div class="form-group"><label for="rentDuration">Срок аренды (часы):</label><input type="number" id="rentDuration" min="1" placeholder="Укажите количество часов"></div>
+                    <div class="form-group"><label for="machineryAddress">Адрес:</label><input type="text" id="machineryAddress" placeholder="Укажите адрес"></div>
+                    <div class="checkbox-group"><input type="checkbox" id="preorderCheckbox"><label for="preorderCheckbox">Предварительный заказ</label></div>
+                    <div id="preorderFields" style="display: none;">
+                        <div class="form-group"><label for="preorderDate">Дата:</label><input type="date" id="preorderDate"></div>
+                        <div class="form-group"><label for="preorderTime">Время:</label><input type="time" id="preorderTime"></div>
+                    </div>
+                </div>
+                <div id="toolsFields" style="display: none;">
+                    <div class="form-group">
+                        <label for="toolsSelect">Выберите инструмент:</label><select id="toolsSelect"></select>
+                        <button type="button" id="addToolBtn" class="profile-button" style="margin-top: 10px;">Добавить инструмент</button>
+                    </div>
+                    <div id="selectedToolsList" style="margin: 15px 0;"></div>
+                    <div class="form-group"><label for="rentStartDate">Дата начала аренды:</label><input type="date" id="rentStartDate" required></div>
+                    <div class="form-group"><label for="rentEndDate">Дата окончания аренды:</label><input type="date" id="rentEndDate" required></div>
+                    <div class="checkbox-group"><input type="checkbox" id="deliveryCheckbox"><label for="deliveryCheckbox">Доставка</label></div>
+                    <div class="form-group" id="deliveryAddressField" style="display: none;"><label for="deliveryAddress">Адрес доставки:</label><input type="text" id="deliveryAddress" placeholder="Укажите адрес доставки" required></div>
+                </div>
+                <div class="form-group"><label for="requestDescription">Описание (необязательно):</label><textarea id="requestDescription" placeholder="Дополнительная информация по заявке..."></textarea></div>
+                <button type="submit" class="submit-button">ОТПРАВИТЬ ЗАЯВКУ</button>
+                <a href="#" class="back-button" id="backToMainFromRequest">← Назад</a>
+            </form>
+        </div>
+    </div>
+    <div id="takeOrderPage"><h2 class="orders-header">Доступные заявки</h2><div class="orders-list" id="ordersList"></div><a href="#" class="back-button" id="backToMainFromTakeOrder">← Назад</a></div>
+    <div id="myRequestsPage"><h2 class="requests-header">Мои заявки</h2><div class="orders-list" id="userRequestsList"></div><a href="#" class="back-button" id="backToProfileFromRequests">← Назад в профиль</a></div>
+    <div id="machineryFormPage">
+        <div class="form-container">
+            <h2 class="form-title">Аренда спецтехники</h2>
+            <form id="machineryForm">
+                <div class="form-group"><label for="machName">Ваше имя:</label><input type="text" id="machName" required></div>
+                <div class="form-group"><label for="machPhone">Номер телефона:</label><input type="tel" id="machPhone" required></div>
+                <div class="form-group"><label for="machCity">Город:</label><input type="text" id="machCity" required></div>
+                <div class="form-group"><label for="machAddress">Адрес:</label><input type="text" id="machAddress" placeholder="Укажите адрес"></div>
+                <div class="form-group"><label for="machType">Тип спецтехники:</label><input type="text" id="machType" readonly placeholder="Выберите технику" required><button type="button" id="openMachineryModalFromForm" class="profile-button" style="margin-top: 10px;">Выбрать технику</button></div>
+                <div class="checkbox-group"><input type="checkbox" id="machNearby"><label for="machNearby">Искать ближайшую технику</label></div>
+                <div class="checkbox-group"><input type="checkbox" id="machMinOrder"><label for="machMinOrder">Минимальный заказ (4 часа)</label></div>
+                <div class="form-group"><label for="rentDurationMach">Срок аренды (часы):</label><input type="number" id="rentDurationMach" min="1" placeholder="Укажите количество часов"></div>
+                <div class="checkbox-group"><input type="checkbox" id="machPreorder"><label for="machPreorder">Предварительный заказ</label></div>
+                <div id="machPreorderFields" style="display: none;">
+                    <div class="form-group"><label for="machDate">Дата:</label><input type="date" id="machDate"></div>
+                    <div class="form-group"><label for="machTime">Время:</label><input type="time" id="machTime"></div>
+                </div>
+                <div class="form-group"><label for="machDescription">Описание (необязательно):</label><textarea id="machDescription" placeholder="Дополнительная информация..."></textarea></div>
+                <div class="form-group"><label for="machPhotos">Фотографии (необязательно):</label><input type="file" id="machPhotos" accept="image/*" multiple><div id="photoPreview" style="margin-top: 10px;"></div></div>
+                <button type="submit" class="submit-button">РАЗМЕСТИТЬ ОБЪЯВЛЕНИЕ</button>
+                <a href="#" class="back-button" id="backToMainFromMachinery">← Назад</a>
+            </form>
+        </div>
+    </div>
+    <div id="toolsFormPage">
+        <div class="form-container">
+            <h2 class="form-title">Аренда инструмента</h2>
+            <form id="toolsForm">
+                <div class="form-group"><label for="toolsContactName">Ваше имя:</label><input type="text" id="toolsContactName" required></div>
+                <div class="form-group"><label for="toolsPhone">Номер телефона:</label><input type="tel" id="toolsPhone" required></div>
+                <div class="form-group"><label for="toolsCity">Город:</label><input type="text" id="toolsCity" required></div>
+                <div class="form-group"><label for="toolsSelectForm">Выберите инструмент:</label><select id="toolsSelectForm"></select><button type="button" id="addToolBtnForm" class="profile-button" style="margin-top: 10px;">Добавить инструмент</button></div>
+                <div id="selectedToolsListForm" style="margin: 15px 0;"></div>
+                <div class="form-group"><label for="rentStartDateForm">Дата начала аренды:</label><input type="date" id="rentStartDateForm" required></div>
+                <div class="form-group"><label for="rentEndDateForm">Дата окончания аренды:</label><input type="date" id="rentEndDateForm" required></div>
+                <div class="checkbox-group"><input type="checkbox" id="deliveryCheckboxForm"><label for="deliveryCheckboxForm">Доставка</label></div>
+                <div class="form-group" id="deliveryAddressFieldForm" style="display: none;"><label for="deliveryAddressForm">Адрес доставки:</label><input type="text" id="deliveryAddressForm" placeholder="Укажите адрес доставки"></div>
+                <div class="form-group"><label for="toolsDescription">Описание (необязательно):</label><textarea id="toolsDescription" placeholder="Дополнительная информация..."></textarea></div>
+                <div class="form-group"><label for="toolsPhotos">Фотографии (необязательно):</label><input type="file" id="toolsPhotos" accept="image/*" multiple><div id="toolsPhotoPreview" style="margin-top: 10px;"></div></div>
+                <button type="submit" class="submit-button">РАЗМЕСТИТЬ ОБЪЯВЛЕНИЕ</button>
+                <a href="#" class="back-button" id="backToMainFromTools">← Назад</a>
+            </form>
+        </div>
+    </div>
+    <div class="machinery-modal" id="machineryModal">
+        <div class="machinery-modal-content">
+            <button class="close-modal" id="closeMachineryModal">&times;</button>
+            <h2 class="modal-title">Выберите вашу технику</h2>
+            <div class="search-container"><i class="fas fa-search search-icon"></i><input type="text" id="machinerySearch" placeholder="Поиск техники..."></div>
+            <div id="machineryCategories"></div>
+            <button class="edit-machinery-btn" id="saveMachinerySelection">СОХРАНИТЬ ВЫБОР</button>
+        </div>
+    </div>
+    <div id="chatPage">
+        <h2 class="chat-header" id="chatHeader">Чат</h2>
+        <div class="messages-container" id="messagesContainer"></div>
+        <div class="message-input-container"><input type="text" class="message-input" id="messageInput" placeholder="Введите сообщение..."><button class="send-button" id="sendMessageButton">Отправить</button></div>
+        <a href="#" class="back-button" id="backToOrdersFromChat">← Назад к заказам</a>
+    </div>
+    <div class="modal" id="paymentModal">
+        <div class="modal-content">
+            <button class="close-modal">&times;</button>
+            <h2 class="modal-title">Оформление подписки "Профи"</h2>
+            <p style="margin-bottom: 20px; text-align: center;">Стоимость: 299 руб./месяц</p>
+            <form id="paymentForm">
+                <div class="form-group"><label for="cardNumber">Номер карты:</label><input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" required></div>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <div style="flex: 1; text-align: left;"><div style="color: #7d6b59; font-size: 14px; margin-bottom: 6px;">Срок действия</div><input type="text" id="cardExpiry" placeholder="MM/YY" required style="width: 100%; padding: 12px; border: 1px solid #c0b0a0; border-radius: 8px; background: #e8dccf; color: #333; font-size: 16px;"></div>
+                    <div style="flex: 1; text-align: left;"><div style="color: #7d6b59; font-size: 14px; margin-bottom: 6px;">CVV</div><input type="text" id="cardCvv" placeholder="123" required style="width: 100%; padding: 12px; border: 1px solid #c0b0a0; border-radius: 8px; background: #e8dccf; color: #333; font-size: 16px;"></div>
+                </div>
+                <div class="form-group"><label for="cardHolder">Имя владельца карты:</label><input type="text" id="cardHolder" placeholder="Иван Иванов" required></div>
+                <button type="submit" class="subscription-button" id="paymentButton">ОПЛАТИТЬ</button>
+            </form>
+        </div>
+    </div>
+    <script>
+        // === ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ===
+        let selectedCity = localStorage.getItem('selectedCity') || '';
+        let currentUserType = localStorage.getItem('userType') || '';
+        let currentUserName = localStorage.getItem('userName') || '';
+        let currentUserPhone = localStorage.getItem('userPhone') || '';
+        let currentPage = 'main';
+        let chatMessages = JSON.parse(localStorage.getItem('chatMessages')) || {};
+        let currentChatOrder = null;
+        // СПИСКИ ДАННЫХ
+        const cities = ["Москва", "Санкт-Петербург", "Новосибирск", "Екатеринбург", "Казань", "Нижний Новгород", "Челябинск", "Самара", "Омск", "Ростов-на-Дону", "Уфа", "Красноярск", "Воронеж", "Пермь", "Волгоград", "Краснодар", "Саратов", "Тюмень", "Тольятти", "Ижевск", "Барнаул", "Ульяновск", "Иркутск", "Хабаровск", "Махачкала", "Ярославль", "Владивосток", "Оренбург", "Томск", "Новокузнецк"];
+        const reqWorkTypeOptions = ["Ремонт сантехники", "Установка сантехники", "Ремонт электрики", "Прокладка электропроводки", "Отделочные работы", "Малярные работы", "Плиточные работы", "Укладка ламината, паркета", "Установка дверей", "Установка окон", "Бетонные работы", "Кровельные работы", "Сварочные работы", "Демонтажные работы", "Внутренняя отделка", "Наружная отделка", "Ландшафтные работы", "Установка заборов", "Установка ворот", "Ремонт техники", "Ремонт мебели", "Другое"];
+        const machineryTypes = ["ЭКСКАВАТОР: Гусеничные", "ЭКСКАВАТОР: Колёсные", "ЭКСКАВАТОР: Мини-экскаваторы", "ЭКСКАВАТОР: Планировщики", "ЭКСКАВАТОР: Длиннорукие (Long Reach)", "ЭКСКАВАТОР: С гидромолотом, ямобуром, вибропогружателем", "ПОГРУЗЧИК: Фронтальные погрузчики", "ПОГРУЗЧИК: Мини-погрузчики (Bobcat и аналоги)", "ПОГРУЗЧИК: Телескопические погрузчики", "ПОГРУЗЧИК: Вилочные погрузчики (дизель, газ, электрические)", "АВТОКРАНЫ И МАНИПУЛЯТОРЫ: До 2 тонн", "АВТОКРАНЫ И МАНИПУЛЯТОРЫ: До 5 тонн", "АВТОКРАНЫ И МАНИПУЛЯТОРЫ: До 10 тонн", "АВТОКРАНЫ И МАНИПУЛЯТОРЫ: До 20 тонн", "АВТОКРАНЫ И МАНИПУЛЯТОРЫ: До 50 тонн", "АВТОКРАНЫ И МАНИПУЛЯТОРЫ: Свыше 50 тонн", "САМОСВАЛЫ: До 5 тонн", "САМОСВАЛЫ: До 10 тонн", "САМОСВАЛЫ: До 20 тонн", "САМОСВАЛЫ: Свыше 20 тонн", "БЕТОНОМЕШАЛКИ: До 100 литров", "БЕТОНОМЕШАЛКИ: До 200 литров", "БЕТОНОМЕШАЛКИ: До 500 литров", "БЕТОНОМЕШАЛКИ: Свыше 500 литров", "КОМПРЕССОРЫ: До 100 литров", "КОМПРЕССОРЫ: До 300 литров", "КОМПРЕССОРЫ: Свыше 300 литров", "ГЕНЕРАТОРЫ: До 5 кВт", "ГЕНЕРАТОРЫ: До 15 кВт", "ГЕНЕРАТОРЫ: До 30 кВт", "ГЕНЕРАТОРЫ: Свыше 30 кВт", "НАСОСЫ: Водяные", "НАСОСЫ: Бетонные", "НАСОСЫ: Пенообразователи", "СТРОИТЕЛЬНЫЕ ЛЕСА: До 3 метров", "СТРОИТЕЛЬНЫЕ ЛЕСА: До 6 метров", "СТРОИТЕЛЬНЫЕ ЛЕСА: Свыше 6 метров", "СТРОИТЕЛЬНЫЕ ВЫШКИ: До 5 метров", "СТРОИТЕЛЬНЫЕ ВЫШКИ: До 10 метров", "СТРОИТЕЛЬНЫЕ ВЫШКИ: Свыше 10 метров", "МИНИ-КРАНЫ: До 3 тонн", "МИНИ-КРАНЫ: До 5 тонн", "МИНИ-КРАНЫ: До 10 тонн"];
+        const toolsList = ["Болгарка (УШМ)", "Дрель", "Шуруповерт", "Перфоратор", "Отбойный молоток", "Гравер (Dremel)", "Лобзик", "Циркулярная пила", "Торцовочная пила", "Плоскогубцы", "Кусачки", "Разводной ключ", "Тиски", "Молоток", "Набор отверток", "Степлер", "Рубанок", "Фрезер", "Шлифмашинка (угловая)", "Шлифмашинка (ленточная)", "Шлифмашинка ( эксцентриковая)", "Пылесос строительный", "Краскопульт", "Триммер", "Газонокосилка", "Бензопила", "Лестница", "Стремянка", "Тачка", "Виброплита", "Виброкаток", "Отделочный инструмент", "Сварочный аппарат", "Генератор", "Компрессор", "Насос", "Строительный фен", "Тестер (мультиметр)", "Уровень (ватерпас)", "Рулетка", "Лазерный уровень", "Строительный миксер", "Емкость для краски", "Валик, кисти"];
+        const machineryCategories = { "ЭКСКАВАТОРЫ": ["ЭКСКАВАТОР: Гусеничные", "ЭКСКАВАТОР: Колёсные", "ЭКСКАВАТОР: Мини-экскаваторы", "ЭКСКАВАТОР: Планировщики", "ЭКСКАВАТОР: Длиннорукие (Long Reach)", "ЭКСКАВАТОР: С гидромолотом, ямобуром, вибропогружателем"], "ПОГРУЗЧИКИ": ["ПОГРУЗЧИК: Фронтальные погрузчики", "ПОГРУЗЧИК: Мини-погрузчики (Bobcat и аналоги)", "ПОГРУЗЧИК: Телескопические погрузчики", "ПОГРУЗЧИК: Вилочные погрузчики (дизель, газ, электрические)"], "АВТОКРАНЫ И МАНИПУЛЯТОРЫ": ["АВТОКРАНЫ И МАНИПУЛЯТОРЫ: До 2 тонн", "АВТОКРАНЫ И МАНИПУЛЯТОРЫ: До 5 тонн", "АВТОКРАНЫ И МАНИПУЛЯТОРЫ: До 10 тонн", "АВТОКРАНЫ И МАНИПУЛЯТОРЫ: До 20 тонн", "АВТОКРАНЫ И МАНИПУЛЯТОРЫ: До 50 тонн", "АВТОКРАНЫ И МАНИПУЛЯТОРЫ: Свыше 50 тонн"], "САМОСВАЛЫ": ["САМОСВАЛЫ: До 5 тонн", "САМОСВАЛЫ: До 10 тонн", "САМОСВАЛЫ: До 20 тонн", "САМОСВАЛЫ: Свыше 20 тонн"], "БЕТОНОМЕШАЛКИ": ["БЕТОНОМЕШАЛКИ: До 100 литров", "БЕТОНОМЕШАЛКИ: До 200 литров", "БЕТОНОМЕШАЛКИ: До 500 литров", "БЕТОНОМЕШАЛКИ: Свыше 500 литров"], "КОМПРЕССОРЫ": ["КОМПРЕССОРЫ: До 100 литров", "КОМПРЕССОРЫ: До 300 литров", "КОМПРЕССОРЫ: Свыше 300 литров"], "ГЕНЕРАТОРЫ": ["ГЕНЕРАТОРЫ: До 5 кВт", "ГЕНЕРАТОРЫ: До 15 кВт", "ГЕНЕРАТОРЫ: До 30 кВт", "ГЕНЕРАТОРЫ: Свыше 30 кВт"], "НАСОСЫ": ["НАСОСЫ: Водяные", "НАСОСЫ: Бетонные", "НАСОСЫ: Пенообразователи"], "СТРОИТЕЛЬНЫЕ ЛЕСА И ВЫШКИ": ["СТРОИТЕЛЬНЫЕ ЛЕСА: До 3 метров", "СТРОИТЕЛЬНЫЕ ЛЕСА: До 6 метров", "СТРОИТЕЛЬНЫЕ ЛЕСА: Свыше 6 метров", "СТРОИТЕЛЬНЫЕ ВЫШКИ: До 5 метров", "СТРОИТЕЛЬНЫЕ ВЫШКИ: До 10 метров", "СТРОИТЕЛЬНЫЕ ВЫШКИ: Свыше 10 метров"], "МИНИ-КРАНЫ": ["МИНИ-КРАНЫ: До 3 тонн", "МИНИ-КРАНЫ: До 5 тонн", "МИНИ-КРАНЫ: До 10 тонн"]};
+        
+        // === ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ ===
+        document.addEventListener('DOMContentLoaded', function() {
+            if (localStorage.getItem('userPhone') && localStorage.getItem('userName')) {
+                currentUserType = localStorage.getItem('userType');
+                currentUserName = localStorage.getItem('userName');
+                currentUserPhone = localStorage.getItem('userPhone');
+                updateMainButtons();
+                showMainPage();
+            } else {
+                switchPage('authModal');
+            }
+            updateCityDisplay();
+            initEventListeners();
+        });
+
+        // === ЦЕНТРАЛИЗОВАННАЯ ФУНКЦИЯ НАВИГАЦИИ ===
+        function switchPage(pageIdToShow) {
+            const allPages = ['buttonContainer', 'authModal', 'profilePage', 'requestFormPage', 'machineryFormPage', 'myRequestsPage', 'toolsFormPage', 'takeOrderPage', 'chatPage'];
+            allPages.forEach(pageId => {
+                const pageElement = document.getElementById(pageId);
+                if (pageElement) pageElement.style.display = 'none';
+            });
+            if (window.Telegram?.WebApp) {
+                Telegram.WebApp.BackButton.hide();
+            }
+            const targetPage = document.getElementById(pageIdToShow);
+            if (targetPage) {
+                targetPage.style.display = 'flex';
+            }
+        }
+
+        // === ОСНОВНАЯ ФУНКЦИЯ ИНИЦИАЛИЗАЦИИ ОБРАБОТЧИКОВ ===
+        function initEventListeners() {
+            document.getElementById('masterButton').addEventListener('click', () => { playSound(); showTakeOrderPage(); });
+            document.getElementById('machineryButton').addEventListener('click', () => { playSound(); showMachineryFormPage(); });
+            document.getElementById('toolsButton').addEventListener('click', () => { playSound(); showToolsFormPage(); });
+            document.getElementById('sellMaterialsButton').addEventListener('click', () => { playSound(); alert('Функция "Продать материалы" находится в разработке и скоро будет доступна!'); });
+            document.getElementById('marketplaceButton').addEventListener('click', () => { playSound(); alert('Доска объявлений находится в разработке. Ваши размещенные объявления появятся здесь в ближайшее время.'); });
+            document.getElementById('profileButton').addEventListener('click', () => { playSound(); showProfilePage(); });
+            
+            document.getElementById('navMaster').addEventListener('click', () => { playSound(); showTakeOrderPage(); });
+            document.getElementById('navCreate').addEventListener('click', () => { playSound(); showRequestFormPage(); });
+            document.getElementById('navProfile').addEventListener('click', () => { playSound(); showProfilePage(); });
+            document.getElementById('navSubscription').addEventListener('click', () => { playSound(); openSubscriptionModal(); });
+            
+            const handleBackClick = (e, callback) => { e.preventDefault(); playSound(); callback(); };
+            document.getElementById('backToMain').addEventListener('click', (e) => handleBackClick(e, showMainPage));
+            document.getElementById('backToMainFromRequest').addEventListener('click', (e) => handleBackClick(e, showMainPage));
+            document.getElementById('backToMainFromTakeOrder').addEventListener('click', (e) => handleBackClick(e, showMainPage));
+            document.getElementById('backToMainFromMachinery').addEventListener('click', (e) => handleBackClick(e, showMainPage));
+            document.getElementById('backToMainFromTools').addEventListener('click', (e) => handleBackClick(e, showMainPage));
+            document.getElementById('backToOrdersFromChat').addEventListener('click', (e) => handleBackClick(e, showTakeOrderPage));
+            document.getElementById('backToProfileFromRequests').addEventListener('click', (e) => handleBackClick(e, showProfilePage));
+            
+            document.getElementById('changeCityButton').addEventListener('click', () => {
+                playSound();
+                initCityModal();
+                document.getElementById('cityModal').classList.add('active');
+            });
+            
+            document.querySelectorAll('.close-modal').forEach(btn => {
+                btn.addEventListener('click', () => { playSound(); closeAllModals(); });
+            });
+            
+            document.getElementById('authForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                playSound();
+                const type = document.getElementById('userType').value;
+                const name = document.getElementById('userName').value.trim();
+                const phone = document.getElementById('userPhone').value.trim();
+                if (!type || !name || !phone) return alert('Пожалуйста, заполните все поля');
+                localStorage.setItem('userType', type);
+                localStorage.setItem('userName', name);
+                localStorage.setItem('userPhone', phone);
+                currentUserType = type;
+                currentUserName = name;
+                currentUserPhone = phone;
+                updateMainButtons();
+                showMainPage();
+            });
+
+            setupProfileListeners();
+            setupRequestFormListeners();
+            setupMachineryFormListeners();
+            setupToolsFormListeners();
+            setupChatListeners();
+            setupPaymentListeners();
+        }
+
+        // === ФУНКЦИИ НАВИГАЦИИ ===
+        function showMainPage() { switchPage('buttonContainer'); currentPage = 'main'; }
+        
+        function showProfilePage() {
+            switchPage('profilePage');
+            currentPage = 'profile';
+            fillProfileData();
+            if (window.Telegram?.WebApp) { Telegram.WebApp.BackButton.show(); Telegram.WebApp.BackButton.onClick(showMainPage); }
+        }
+        
+        function showRequestFormPage() {
+            if (!selectedCity) { initCityModal(); document.getElementById('cityModal').classList.add('active'); window.onCitySelected = () => showRequestFormPage(); return; }
+            switchPage('requestFormPage');
+            currentPage = 'request';
+            resetAndFillRequestForm();
+            if (window.Telegram?.WebApp) { Telegram.WebApp.BackButton.show(); Telegram.WebApp.BackButton.onClick(showMainPage); }
+        }
+        
+        function showTakeOrderPage() {
+            if (!selectedCity) { initCityModal(); document.getElementById('cityModal').classList.add('active'); window.onCitySelected = () => showTakeOrderPage(); return; }
+            if (currentUserType === "ЗАКАЗЧИК") { showMyRequestsPage(); return; }
+            if (currentUserType !== "ИСПОЛНИТЕЛЬ" && currentUserType !== "ВЛАДЕЛЕЦ СПЕЦТЕХНИКИ") { alert("Только исполнители и владельцы спецтехники могут брать заказы"); return; }
+            if (currentUserType === "ИСПОЛНИТЕЛЬ" && !localStorage.getItem('userSpecialization')) { alert("Укажите специализацию в профиле, чтобы видеть заказы"); showProfilePage(); return; }
+            switchPage('takeOrderPage');
+            currentPage = 'takeOrder';
+            loadAvailableOrders();
+            if (window.Telegram?.WebApp) { Telegram.WebApp.BackButton.show(); Telegram.WebApp.BackButton.onClick(showMainPage); }
+        }
+        
+        function showMyRequestsPage() {
+            switchPage('myRequestsPage');
+            currentPage = 'myRequests';
+            loadUserRequests();
+            if (window.Telegram?.WebApp) { Telegram.WebApp.BackButton.show(); Telegram.WebApp.BackButton.onClick(showProfilePage); }
+        }
+        
+        function showMachineryFormPage() {
+            if (!selectedCity) { initCityModal(); document.getElementById('cityModal').classList.add('active'); window.onCitySelected = showMachineryFormPage; return; }
+            switchPage('machineryFormPage');
+            currentPage = 'machinery';
+            document.getElementById('machineryForm').reset();
+            document.getElementById('machCity').value = selectedCity;
+            document.getElementById('machName').value = currentUserName;
+            document.getElementById('machPhone').value = currentUserPhone;
+            document.getElementById('photoPreview').innerHTML = '';
+            if (window.Telegram?.WebApp) { Telegram.WebApp.BackButton.show(); Telegram.WebApp.BackButton.onClick(showMainPage); }
+        }
+        
+        function showToolsFormPage() {
+            if (!selectedCity) { initCityModal(); document.getElementById('cityModal').classList.add('active'); window.onCitySelected = showToolsFormPage; return; }
+            switchPage('toolsFormPage');
+            currentPage = 'tools';
+            document.getElementById('toolsForm').reset();
+            document.getElementById('selectedToolsListForm').innerHTML = '';
+            document.getElementById('toolsPhotoPreview').innerHTML = '';
+            document.getElementById('toolsCity').value = selectedCity;
+            document.getElementById('toolsContactName').value = currentUserName;
+            document.getElementById('toolsPhone').value = currentUserPhone;
+            populateSelectWithOptions('toolsSelectForm', toolsList, 'Выберите инструмент');
+            if (window.Telegram?.WebApp) { Telegram.WebApp.BackButton.show(); Telegram.WebApp.BackButton.onClick(showMainPage); }
+        }
+
+        function showChatPage(order) {
+            currentChatOrder = order;
+            switchPage('chatPage');
+            currentPage = 'chat';
+            document.getElementById('chatHeader').textContent = `Чат с ${order.name}`;
+            loadChatMessages();
+            if (window.Telegram?.WebApp) { Telegram.WebApp.BackButton.show(); Telegram.WebApp.BackButton.onClick(showTakeOrderPage); }
+        }
+        
+        // === ГРУППЫ ОБРАБОТЧИКОВ ===
+        function setupProfileListeners() {
+            document.getElementById('saveSpecialization').addEventListener('click', () => {
+                const val = document.getElementById('profileSpecializationSelect').value;
+                localStorage.setItem('userSpecialization', val);
+                document.getElementById('profileSpecialization').textContent = val || 'Не указана';
+                alert("Специализация сохранена");
+            });
+            document.getElementById('saveExecutorInfo').addEventListener('click', () => {
+                localStorage.setItem('executorAbout', document.getElementById('executorAbout').value);
+                localStorage.setItem('executorSkills', document.getElementById('executorSkills').value);
+                alert('Информация об исполнителе сохранена!');
+            });
+            document.getElementById('saveShopInfo').addEventListener('click', () => {
+                localStorage.setItem('shopContacts', document.getElementById('shopContacts').value);
+                localStorage.setItem('shopLocation', document.getElementById('shopLocation').value);
+                localStorage.setItem('shopAssortment', document.getElementById('shopAssortment').value);
+                alert('Информация о магазине сохранена!');
+            });
+            document.getElementById('openMachineryModal').addEventListener('click', openMachineryModal);
+            document.getElementById('saveMachinery').addEventListener('click', () => { alert('Выбор техники сохраняется в модальном окне кнопкой "Сохранить выбор"'); });
+            document.getElementById('myRequestsButton').addEventListener('click', () => { playSound(); showMyRequestsPage(); });
+            document.getElementById('logoutButton').addEventListener('click', () => { playSound(); logoutUser(); });
+            document.getElementById('subscriptionButton').addEventListener('click', () => { playSound(); openSubscriptionModal(); });
+        }
+
+        function setupRequestFormListeners() {
+            document.getElementById('requestType').addEventListener('change', function() {
+                const type = this.value;
+                const workFields = document.getElementById('workFields');
+                const machineryFields = document.getElementById('machineryFields');
+                const toolsFields = document.getElementById('toolsFields');
+                
+                workFields.style.display = type === 'Работы' ? 'block' : 'none';
+                machineryFields.style.display = type === 'Аренда спецтехники' ? 'block' : 'none';
+                toolsFields.style.display = type === 'Аренда инструмента' ? 'block' : 'none';
+                
+                // Управление атрибутом required
+                document.getElementById('workType').required = (type === 'Работы');
+                document.getElementById('machineryType').required = (type === 'Аренда спецтехники');
+                document.getElementById('rentStartDate').required = (type === 'Аренда инструмента');
+                document.getElementById('rentEndDate').required = (type === 'Аренда инструмента');
+
+
+                if (type === 'Работы') {
+                    populateSelectWithOptions('workType', reqWorkTypeOptions, 'Выберите тип работ');
+                    document.getElementById('visitCheckbox').dispatchEvent(new Event('change')); // Обновить состояние поля адреса
+                }
+                if (type === 'Аренда спецтехники') {
+                     populateSelectWithOptions('machineryType', machineryTypes, 'Выберите тип техники');
+                }
+                if (type === 'Аренда инструмента') {
+                     populateSelectWithOptions('toolsSelect', toolsList, 'Выберите инструмент');
+                     document.getElementById('deliveryCheckbox').dispatchEvent(new Event('change'));
+                }
+            });
+            
+            document.getElementById('visitCheckbox').addEventListener('change', function() { 
+                const addressField = document.getElementById('addressField');
+                addressField.style.display = this.checked ? 'block' : 'none';
+                document.getElementById('workAddress').required = this.checked;
+            });
+
+            document.getElementById('deliveryCheckbox').addEventListener('change', function() {
+                const deliveryAddressField = document.getElementById('deliveryAddressField');
+                deliveryAddressField.style.display = this.checked ? 'block' : 'none';
+                document.getElementById('deliveryAddress').required = this.checked;
+            });
+
+            document.getElementById('preorderCheckbox').addEventListener('change', function() { document.getElementById('preorderFields').style.display = this.checked ? 'block' : 'none'; });
+            document.getElementById('addToolBtn').addEventListener('click', () => addToolToList('toolsSelect', 'selectedToolsList'));
+            document.getElementById('requestForm').addEventListener('submit', handleRequestFormSubmit);
+        }
+
+        function setupMachineryFormListeners() {
+            document.getElementById('openMachineryModalFromForm').addEventListener('click', openMachineryModal);
+            document.getElementById('machPreorder').addEventListener('change', function() { document.getElementById('machPreorderFields').style.display = this.checked ? 'block' : 'none'; });
+            document.getElementById('machPhotos').addEventListener('change', (e) => handlePhotoPreview(e, 'photoPreview'));
+            document.getElementById('machineryForm').addEventListener('submit', handleMachineryFormSubmit);
+            document.getElementById('closeMachineryModal').addEventListener('click', () => document.getElementById('machineryModal').classList.remove('active'));
+            document.getElementById('saveMachinerySelection').addEventListener('click', saveMachinerySelection);
+            document.getElementById('machinerySearch').addEventListener('input', filterMachinery);
+            document.addEventListener('click', function(e) {
+                if (e.target && e.target.classList.contains('machinery-category-header')) {
+                    e.target.nextElementSibling?.classList.toggle('active');
+                }
+            });
+        }
+        
+        function setupToolsFormListeners() {
+            document.getElementById('addToolBtnForm').addEventListener('click', () => addToolToList('toolsSelectForm', 'selectedToolsListForm'));
+            document.getElementById('deliveryCheckboxForm').addEventListener('change', function() { 
+                const field = document.getElementById('deliveryAddressFieldForm');
+                field.style.display = this.checked ? 'block' : 'none';
+                document.getElementById('deliveryAddressForm').required = this.checked;
+            });
+            document.getElementById('toolsPhotos').addEventListener('change', (e) => handlePhotoPreview(e, 'toolsPhotoPreview'));
+            document.getElementById('toolsForm').addEventListener('submit', handleToolsFormSubmit);
+        }
+        
+        function setupChatListeners() {
+            document.getElementById('sendMessageButton').addEventListener('click', sendMessage);
+            document.getElementById('messageInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+        }
+        
+        function setupPaymentListeners() {
+            document.getElementById('paymentForm').addEventListener('submit', handlePaymentFormSubmit);
+        }
+
+        // === ЛОГИКА И ФУНКЦИИ ПРИЛОЖЕНИЯ ===
+        function playSound() {}
+        
+        function closeAllModals() {
+            document.querySelectorAll('.modal.active, .machinery-modal.active').forEach(modal => modal.classList.remove('active'));
+        }
+        
+        function updateMainButtons() {
+            const masterButton = document.getElementById('masterButton');
+            if (!masterButton) return;
+            if (currentUserType === "ЗАКАЗЧИК") {
+                masterButton.innerHTML = '<span>МОИ ЗАЯВКИ</span><small>создать или посмотреть</small>';
+            } else {
+                masterButton.innerHTML = '<span>ВЗЯТЬ ЗАКАЗ</span><small>доступные заявки в вашем городе</small>';
+            }
+        }
+        
+        function updateCityDisplay() {
+            document.getElementById('cityName').textContent = selectedCity || 'Не выбран';
+        }
+        
+        function initCityModal() {
+            const cityButtons = document.getElementById('cityButtons');
+            const citySearch = document.getElementById('citySearch');
+            cityButtons.innerHTML = '';
+            cities.forEach(city => {
+                const button = document.createElement('button');
+                button.className = 'modal-button';
+                button.textContent = city;
+                button.addEventListener('click', () => {
+                    selectedCity = city;
+                    localStorage.setItem('selectedCity', city);
+                    updateCityDisplay();
+                    closeAllModals();
+                    if (window.onCitySelected) {
+                        window.onCitySelected();
+                        window.onCitySelected = null;
+                    }
+                });
+                cityButtons.appendChild(button);
+            });
+            citySearch.value = '';
+            citySearch.dispatchEvent(new Event('input'));
+            citySearch.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                cityButtons.querySelectorAll('.modal-button').forEach(button => {
+                    button.style.display = button.textContent.toLowerCase().includes(searchTerm) ? 'flex' : 'none';
+                });
+            });
+        }
+        
+        function fillProfileData() {
+            document.getElementById('profileType').textContent = currentUserType;
+            document.getElementById('profileName').textContent = currentUserName;
+            document.getElementById('profilePhone').textContent = currentUserPhone;
+            updateProfileRating();
+            const specializationDisplay = document.getElementById('profileSpecializationDisplay');
+            const specializationGroup = document.getElementById('specializationGroup');
+            document.getElementById('executorProfileFields').style.display = 'none';
+            document.getElementById('shopProfileFields').style.display = 'none';
+            document.getElementById('ownerProfileFields').style.display = 'none';
+            if (currentUserType === "ИСПОЛНИТЕЛЬ") {
+                specializationDisplay.style.display = 'block';
+                specializationGroup.style.display = 'block';
+                populateSelectWithOptions('profileSpecializationSelect', reqWorkTypeOptions, 'Не указана');
+                const currentSpecialization = localStorage.getItem('userSpecialization') || '';
+                document.getElementById('profileSpecializationSelect').value = currentSpecialization;
+                document.getElementById('profileSpecialization').textContent = currentSpecialization || 'Не указана';
+                document.getElementById('executorProfileFields').style.display = 'block';
+                document.getElementById('executorAbout').value = localStorage.getItem('executorAbout') || '';
+                document.getElementById('executorSkills').value = localStorage.getItem('executorSkills') || '';
+            } else {
+                specializationDisplay.style.display = 'none';
+                specializationGroup.style.display = 'none';
+                if (currentUserType === "ПРОДАВЕЦ - МАГАЗИН") {
+                    document.getElementById('shopProfileFields').style.display = 'block';
+                    document.getElementById('shopContacts').value = localStorage.getItem('shopContacts') || '';
+                    document.getElementById('shopLocation').value = localStorage.getItem('shopLocation') || '';
+                    document.getElementById('shopAssortment').value = localStorage.getItem('shopAssortment') || '';
+                } else if (currentUserType === "ВЛАДЕЛЕЦ СПЕЦТЕХНИКИ") {
+                    document.getElementById('ownerProfileFields').style.display = 'block';
+                    updateSelectedMachineryDisplay();
+                }
+            }
+            updateSubscriptionInfo();
+        }
+        
+        function resetAndFillRequestForm() {
+            const form = document.getElementById('requestForm');
+            form.reset();
+            // Сброс динамических полей
+            document.getElementById('workFields').style.display = 'none';
+            document.getElementById('machineryFields').style.display = 'none';
+            document.getElementById('toolsFields').style.display = 'none';
+            document.getElementById('selectedToolsList').innerHTML = '';
+            document.getElementById('addressField').style.display = 'none';
+            document.getElementById('deliveryAddressField').style.display = 'none';
+
+            // Сброс required атрибутов
+            document.getElementById('workType').required = false;
+            document.getElementById('workAddress').required = false;
+            document.getElementById('machineryType').required = false;
+            document.getElementById('rentStartDate').required = false;
+            document.getElementById('rentEndDate').required = false;
+            document.getElementById('deliveryAddress').required = false;
+
+            // Заполнение данных пользователя
+            document.getElementById('requestName').value = currentUserName;
+            document.getElementById('requestPhone').value = currentUserPhone;
+            document.getElementById('requestCity').value = selectedCity;
+        }
+        
+        function populateSelectWithOptions(selectId, options, placeholder) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            select.innerHTML = `<option value="">${placeholder}</option>`;
+            options.forEach(optionText => {
+                const opt = document.createElement('option');
+                opt.value = opt.textContent = optionText;
+                select.appendChild(opt);
+            });
+        }
+
+        // === ИСПРАВЛЕННЫЕ И РЕАЛИЗОВАННЫЕ ФУНКЦИИ ОТПРАВКИ ФОРМ ===
+        function handleRequestFormSubmit(e) {
+            e.preventDefault();
+            playSound();
+            
+            // Проверяем валидность формы средствами браузера
+            if (!e.target.checkValidity()) {
+                e.target.reportValidity(); // Показать стандартные сообщения об ошибках
+                return;
+            }
+
+            const requestData = {
+                listingType: 'request',
+                type: document.getElementById('requestType').value,
+                name: document.getElementById('requestName').value.trim(),
+                phone: document.getElementById('userPhone').value.trim(),
+                city: document.getElementById('requestCity').value.trim(),
+                description: document.getElementById('requestDescription').value.trim(),
+                timestamp: new Date().toISOString()
+            };
+
+            // Основная проверка на заполненность
+            if (!requestData.type || !requestData.name || !requestData.phone || !requestData.city) {
+                return alert('Пожалуйста, заполните все обязательные поля');
+            }
+
+            // Логика для разных типов заявок
+            if (requestData.type === 'Работы') {
+                requestData.work_type = document.getElementById('workType').value;
+                // Эта проверка дублирует required, но надежнее
+                if (!requestData.work_type) return alert('Выберите тип работ');
+
+                requestData.visit = document.getElementById('visitCheckbox').checked;
+                if (requestData.visit) {
+                    requestData.address = document.getElementById('workAddress').value.trim();
+                    // *** КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ ***
+                    if (!requestData.address) {
+                        return alert('Пожалуйста, укажите адрес для выезда мастера.');
+                    }
+                }
+            } else if (requestData.type === 'Аренда спецтехники') {
+                requestData.mach_type = document.getElementById('machineryType').value;
+                if (!requestData.mach_type) return alert('Выберите тип спецтехники');
+                requestData.duration = document.getElementById('rentDuration').value;
+                requestData.address = document.getElementById('machineryAddress').value.trim();
+
+            } else if (requestData.type === 'Аренда инструмента') {
+                requestData.tools = Array.from(document.querySelectorAll('#selectedToolsList .tool-item')).map(el => ({
+                    name: el.querySelector('span').textContent,
+                    qty: el.querySelector('input').value
+                }));
+                if (requestData.tools.length === 0) return alert('Добавьте хотя бы один инструмент');
+                
+                requestData.rent_start = document.getElementById('rentStartDate').value;
+                requestData.rent_end = document.getElementById('rentEndDate').value;
+                if (!requestData.rent_start || !requestData.rent_end) return alert('Укажите даты начала и окончания аренды');
+
+                requestData.delivery = document.getElementById('deliveryCheckbox').checked;
+                if (requestData.delivery) {
+                    requestData.delivery_address = document.getElementById('deliveryAddress').value.trim();
+                    if (!requestData.delivery_address) {
+                        return alert('Пожалуйста, укажите адрес для доставки.');
+                    }
+                }
+            }
+
+            let allOrders = JSON.parse(localStorage.getItem('allOrders') || '[]');
+            allOrders.push(requestData);
+            localStorage.setItem('allOrders', JSON.stringify(allOrders));
+            
+            alert('Заявка успешно создана! Вы можете отслеживать ее статус в Личном кабинете.');
+            showMainPage();
+        }
+
+        function handleMachineryFormSubmit(e) { 
+            e.preventDefault(); 
+            playSound();
+             if (!e.target.checkValidity()) {
+                e.target.reportValidity();
+                return;
+            }
+            
+            const adData = {
+                listingType: 'ad',
+                type: 'Объявление - Аренда спецтехники',
+                name: document.getElementById('machName').value,
+                phone: document.getElementById('machPhone').value,
+                city: document.getElementById('machCity').value,
+                address: document.getElementById('machAddress').value,
+                mach_type: document.getElementById('machType').value,
+                duration: document.getElementById('rentDurationMach').value,
+                description: document.getElementById('machDescription').value,
+                timestamp: new Date().toISOString()
+            };
+
+            let allOrders = JSON.parse(localStorage.getItem('allOrders') || '[]');
+            allOrders.push(adData);
+            localStorage.setItem('allOrders', JSON.stringify(allOrders));
+
+            alert('Объявление успешно размещено! Оно будет доступно для просмотра потенциальным клиентам.');
+            showMainPage();
+        }
+        
+        function handleToolsFormSubmit(e) { 
+            e.preventDefault(); 
+            playSound();
+            if (!e.target.checkValidity()) {
+                e.target.reportValidity();
+                return;
+            }
+            
+            const adData = {
+                listingType: 'ad',
+                type: 'Объявление - Аренда инструмента',
+                name: document.getElementById('toolsContactName').value,
+                phone: document.getElementById('toolsPhone').value,
+                city: document.getElementById('toolsCity').value,
+                tools: Array.from(document.querySelectorAll('#selectedToolsListForm .tool-item')).map(el => ({
+                    name: el.querySelector('span').textContent,
+                    qty: el.querySelector('input').value
+                })),
+                rent_start: document.getElementById('rentStartDateForm').value,
+                rent_end: document.getElementById('rentEndDateForm').value,
+                delivery: document.getElementById('deliveryCheckboxForm').checked,
+                delivery_address: document.getElementById('deliveryAddressForm').value,
+                description: document.getElementById('toolsDescription').value,
+                timestamp: new Date().toISOString()
+            };
+
+            if (adData.tools.length === 0) {
+                return alert('Добавьте хотя бы один инструмент для сдачи в аренду.');
+            }
+             if (adData.delivery && !adData.delivery_address.trim()) {
+                return alert('Пожалуйста, укажите адрес для доставки.');
+            }
+
+            let allOrders = JSON.parse(localStorage.getItem('allOrders') || '[]');
+            allOrders.push(adData);
+            localStorage.setItem('allOrders', JSON.stringify(allOrders));
+
+            alert('Объявление об аренде инструмента успешно размещено!');
+            showMainPage();
+        }
+
+        function handlePaymentFormSubmit(e) {
+            e.preventDefault();
+            playSound();
+            const form = document.getElementById('paymentForm');
+            if (!form.checkValidity()) {
+                alert('Пожалуйста, заполните все поля платежной формы');
+                return;
+            }
+            const button = document.getElementById('paymentButton');
+            button.disabled = true;
+            button.textContent = 'Обработка...';
+            setTimeout(() => {
+                const expiryDate = new Date();
+                expiryDate.setDate(expiryDate.getDate() + 30);
+                const subscription = { active: true, expiry: expiryDate.toISOString() };
+                localStorage.setItem('subscription', JSON.stringify(subscription));
+                updateSubscriptionInfo();
+                closeAllModals();
+                form.reset();
+                button.disabled = false;
+                button.textContent = 'ОПЛАТИТЬ';
+                alert('Подписка успешно оформлена!');
+                if (currentPage === 'takeOrder') {
+                    loadAvailableOrders();
+                }
+            }, 1500);
+        }
+        
+        function handlePhotoPreview(event, previewId) {
+            const preview = document.getElementById(previewId);
+            preview.innerHTML = '';
+            if (!event.target.files) return;
+            for (let i = 0; i < Math.min(event.target.files.length, 3); i++) {
+                const file = event.target.files[i];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.cssText = 'width: 80px; height: 80px; object-fit: cover; margin: 5px; border-radius: 8px;';
+                    preview.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        function loadAvailableOrders() {
+            const list = document.getElementById('ordersList');
+            list.innerHTML = `<div class="no-orders">Загрузка заявок...</div>`;
+            const allOrders = JSON.parse(localStorage.getItem('allOrders') || '[]');
+            const userSpecialization = localStorage.getItem('userSpecialization');
+            const ownerMachinery = JSON.parse(localStorage.getItem('ownerMachinery') || '[]');
+            
+            const filteredOrders = allOrders.filter(order => {
+                if (order.city !== selectedCity || order.takenBy || order.listingType !== 'request') return false; 
+                if (currentUserType === "ИСПОЛНИТЕЛЬ" && order.type === "Работы" && order.work_type === userSpecialization) return true;
+                if (currentUserType === "ВЛАДЕЛЕЦ СПЕЦТЕХНИКИ" && order.type === "Аренда спецтехники" && ownerMachinery.includes(order.mach_type)) return true;
+                // TODO: Добавить логику для аренды инструмента, если исполнители могут их предлагать
+                return false;
+            }).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            list.innerHTML = '';
+            if (filteredOrders.length === 0) {
+                list.innerHTML = `<div class="no-orders">Нет подходящих заявок в вашем городе</div>`;
+                return;
+            }
+            
+            const subscriptionActive = isSubscriptionActive();
+            filteredOrders.forEach((order) => {
+                const card = document.createElement('div');
+                card.className = 'order-card';
+                let detailsHTML = `
+                    <strong>Заявка: ${order.type}</strong>
+                    <div><small>Город: ${order.city}</small></div>
+                    ${order.work_type ? `<div><small>Тип работ: ${order.work_type}</small></div>` : ''}
+                    ${order.mach_type ? `<div><small>Техника: ${order.mach_type}</small></div>` : ''}
+                    ${order.description ? `<div><small>Описание: ${order.description}</small></div>` : ''}
+                `;
+                if (subscriptionActive) {
+                    detailsHTML += `
+                        ${order.address ? `<div><small><b>Адрес:</b> ${order.address}</small></div>` : ''}
+                        ${order.phone ? `<div><small><b>Телефон:</b> ${order.phone}</small></div>` : ''}
+                    `;
+                } else {
+                    detailsHTML += `<div class="subscription-notice">Полная информация (адрес, телефон) доступна после оформления подписки.</div>`;
+                }
+                card.innerHTML = detailsHTML;
+                const actionButton = document.createElement('button');
+                actionButton.className = 'take-order-btn';
+                if (subscriptionActive) {
+                    actionButton.textContent = 'ВЗЯТЬ ЗАКАЗ';
+                    actionButton.onclick = () => takeOrder(order.timestamp);
+                } else {
+                    actionButton.textContent = 'ОФОРМИТЬ ПОДПИСКУ';
+                    actionButton.onclick = openSubscriptionModal;
+                }
+                card.appendChild(actionButton);
+                list.appendChild(card);
+            });
+        }
+        
+        function loadUserRequests() {
+            const list = document.getElementById('userRequestsList');
+            list.innerHTML = `<div class="no-orders">Загрузка...</div>`;
+            const allOrders = JSON.parse(localStorage.getItem('allOrders') || '[]');
+            const userOrders = allOrders.filter(order => order.phone === currentUserPhone).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            list.innerHTML = '';
+            if (userOrders.length === 0) {
+                list.innerHTML = `<div class="no-orders">У вас пока нет заявок или объявлений</div>`;
+                return;
+            }
+
+            userOrders.forEach((order) => {
+                const card = document.createElement('div');
+                card.className = 'request-card';
+                
+                let title = order.listingType === 'ad' ? 'Объявление' : 'Заявка';
+                let statusText = order.takenBy ? `В работе (Исп. ${order.takenBy.name})` : (order.listingType === 'ad' ? 'Активно' : 'Ожидает исполнителя');
+
+                card.innerHTML = `
+                    <strong>${title}: ${order.type}</strong>
+                    <div><small>Статус: ${statusText}</small></div>
+                    <div><small>Дата: ${new Date(order.timestamp).toLocaleString('ru-RU')}</small></div>
+                    <div class="request-actions">
+                        <button class="view-btn" data-timestamp="${order.timestamp}">Просмотр</button>
+                        <button class="delete-btn" data-timestamp="${order.timestamp}">Удалить</button>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+            list.querySelectorAll('.view-btn').forEach(btn => btn.addEventListener('click', (e) => viewUserRequest(e.target.dataset.timestamp)));
+            list.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', (e) => deleteUserRequest(e.target.dataset.timestamp)));
+        }
+        
+        function viewUserRequest(timestamp) {
+            const allOrders = JSON.parse(localStorage.getItem('allOrders') || '[]');
+            const order = allOrders.find(o => o.timestamp === timestamp);
+            if (!order) return alert('Заявка не найдена');
+            let details = `ИНФОРМАЦИЯ\n----------------------\nГород: ${order.city}\nТип: ${order.type}\n`;
+            if (order.work_type) details += `Работа: ${order.work_type}\n`;
+            if (order.mach_type) details += `Техника: ${order.mach_type}\n`;
+            if (order.description) details += `Описание: ${order.description}\n`;
+            let statusText = order.takenBy ? `В работе (Исп. ${order.takenBy.name}, тел: ${order.takenBy.phone})` : (order.listingType === 'ad' ? 'Активно' : 'Ожидает исполнителя');
+            details += `Статус: ${statusText}`;
+            alert(details);
+        }
+        
+        function deleteUserRequest(timestamp) {
+            if (!confirm('Вы уверены, что хотите удалить эту запись? Это действие нельзя будет отменить.')) return;
+            let allOrders = JSON.parse(localStorage.getItem('allOrders') || '[]');
+            const updatedOrders = allOrders.filter(o => o.timestamp !== timestamp);
+            localStorage.setItem('allOrders', JSON.stringify(updatedOrders));
+            loadUserRequests();
+        }
+        
+        function takeOrder(timestamp) {
+            if (!isSubscriptionActive()) return alert("Для взятия заказов необходима подписка.");
+            if (!confirm("Вы уверены, что хотите взять этот заказ?")) return;
+            let allOrders = JSON.parse(localStorage.getItem('allOrders') || '[]');
+            const orderIndex = allOrders.findIndex(o => o.timestamp === timestamp);
+            if (orderIndex === -1) return alert('Заказ уже неактуален.');
+            allOrders[orderIndex].takenBy = { name: currentUserName, phone: currentUserPhone };
+            localStorage.setItem('allOrders', JSON.stringify(allOrders));
+            alert('Вы успешно взяли заказ! Контакты заказчика: ' + allOrders[orderIndex].phone);
+            loadAvailableOrders();
+        }
+        
+        function openSubscriptionModal() {
+            document.getElementById('paymentModal').classList.add('active');
+        }
+        
+        function updateProfileRating() {
+             document.getElementById('profileRating').textContent = `⭐ 5.0 (1)`;
+        }
+        
+        function updateSubscriptionInfo() {
+            const subscription = JSON.parse(localStorage.getItem('subscription') || 'null');
+            const statusEl = document.getElementById('subscriptionStatus');
+            const expiryEl = document.getElementById('subscriptionExpiry');
+            const subButton = document.getElementById('subscriptionButton');
+            if (isSubscriptionActive()) {
+                statusEl.textContent = 'Активна';
+                statusEl.classList.add('active');
+                expiryEl.textContent = `до ${new Date(subscription.expiry).toLocaleDateString('ru-RU')}`;
+                subButton.textContent = 'Подписка активна';
+                subButton.disabled = true;
+            } else {
+                statusEl.textContent = 'Не активна';
+                statusEl.classList.remove('active');
+                expiryEl.textContent = '-';
+                subButton.textContent = 'Оформить подписку';
+                subButton.disabled = false;
+            }
+        }
+        
+        function isSubscriptionActive() {
+            const subscription = JSON.parse(localStorage.getItem('subscription') || 'null');
+            return subscription && subscription.active && new Date(subscription.expiry) > new Date();
+        }
+        
+        function logoutUser() {
+            const userKeys = ['userType', 'userName', 'userPhone', 'selectedCity', 'userSpecialization', 'executorAbout', 'executorSkills', 'shopContacts', 'shopLocation', 'shopAssortment', 'ownerMachinery', 'subscription'];
+            userKeys.forEach(key => localStorage.removeItem(key));
+            currentUserType = currentUserName = currentUserPhone = selectedCity = '';
+            switchPage('authModal');
+            document.getElementById('authForm').reset();
+            alert('Вы вышли из аккаунта.');
+        }
+        
+        function addToolToList(selectId, listId) {
+            const select = document.getElementById(selectId);
+            const list = document.getElementById(listId);
+            const selectedTool = select.value;
+            if (!selectedTool) return alert('Пожалуйста, выберите инструмент');
+            const existing = list.querySelector(`[data-tool-name="${selectedTool}"]`);
+            if (existing) return alert('Этот инструмент уже добавлен в список.');
+            const toolItem = document.createElement('div');
+            toolItem.className = 'tool-item';
+            toolItem.dataset.toolName = selectedTool;
+            toolItem.innerHTML = `
+                <span>${selectedTool}</span>
+                <div>
+                    <label>Кол-во: <input type="number" min="1" value="1" style="width: 50px;"></label>
+                    <button type="button" class="remove-tool" style="margin-left: 10px;">&times;</button>
+                </div>`;
+            toolItem.querySelector('.remove-tool').addEventListener('click', () => toolItem.remove());
+            list.appendChild(toolItem);
+            select.value = '';
+        }
+        
+        function openMachineryModal() {
+            document.getElementById('machineryModal').classList.add('active');
+            const ownerMachinery = JSON.parse(localStorage.getItem('ownerMachinery') || '[]');
+            const categoriesContainer = document.getElementById('machineryCategories');
+            categoriesContainer.innerHTML = '';
+            for (const [category, items] of Object.entries(machineryCategories)) {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'machinery-category';
+                const itemsDiv = document.createElement('div');
+                itemsDiv.className = 'machinery-category-items';
+                items.forEach(machinery => {
+                    const id = `mach_${machinery.replace(/[^a-zA-Z0-9]/g, '')}`;
+                    const checked = ownerMachinery.includes(machinery) ? 'checked' : '';
+                    itemsDiv.innerHTML += `
+                        <div class="machinery-item">
+                            <input type="checkbox" id="${id}" value="${machinery}" ${checked}>
+                            <label for="${id}">${machinery}</label>
+                        </div>`;
+                });
+                categoryDiv.innerHTML = `<div class="machinery-category-header">${category}</div>`;
+                categoryDiv.appendChild(itemsDiv);
+                categoriesContainer.appendChild(categoryDiv);
+            }
+        }
+        
+        function filterMachinery() {
+            const searchTerm = document.getElementById('machinerySearch').value.toLowerCase();
+            document.querySelectorAll('.machinery-category').forEach(category => {
+                let hasVisibleItems = false;
+                category.querySelectorAll('.machinery-item').forEach(item => {
+                    const isVisible = item.querySelector('label').textContent.toLowerCase().includes(searchTerm);
+                    item.style.display = isVisible ? 'flex' : 'none';
+                    if (isVisible) hasVisibleItems = true;
+                });
+                category.style.display = hasVisibleItems ? 'block' : 'none';
+            });
+        }
+        
+        function saveMachinerySelection() {
+            const selected = Array.from(document.querySelectorAll('#machineryCategories input:checked')).map(cb => cb.value);
+            localStorage.setItem('ownerMachinery', JSON.stringify(selected));
+            updateSelectedMachineryDisplay();
+            if (currentPage === 'machinery') {
+                document.getElementById('machType').value = selected.join(', ');
+            }
+            closeAllModals();
+            alert('Выбор сохранен!');
+        }
+        
+        function updateSelectedMachineryDisplay() {
+            const display = document.getElementById('selectedMachineryDisplay');
+            const ownerMachinery = JSON.parse(localStorage.getItem('ownerMachinery') || '[]');
+            if (ownerMachinery.length === 0) {
+                display.textContent = 'Выбранная техника будет отображаться здесь';
+                return;
+            }
+            display.innerHTML = '<ul>' + ownerMachinery.map(m => `<li>${m}</li>`).join('') + '</ul>';
+        }
+        
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            if (!text || !currentChatOrder) return;
+            const chatId = `${currentChatOrder.phone}-${currentChatOrder.timestamp}`;
+            if (!chatMessages[chatId]) chatMessages[chatId] = [];
+            chatMessages[chatId].push({ sender: 'user', text, timestamp: new Date().toISOString() });
+            localStorage.setItem('chatMessages', JSON.stringify(chatMessages));
+            loadChatMessages();
+            input.value = '';
+            setTimeout(() => {
+                const response = "Ваше сообщение получено. Скоро отвечу.";
+                chatMessages[chatId].push({ sender: 'customer', text: response, timestamp: new Date().toISOString() });
+                localStorage.setItem('chatMessages', JSON.stringify(chatMessages));
+                loadChatMessages();
+            }, 1500);
+        }
+        
+        function loadChatMessages() {
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML = '';
+            if (!currentChatOrder) return;
+            const chatId = `${currentChatOrder.phone}-${currentChatOrder.timestamp}`;
+            const messages = chatMessages[chatId] || [];
+            messages.forEach(msg => {
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `message ${msg.sender === 'user' ? 'sent' : 'received'}`;
+                msgDiv.textContent = msg.text;
+                container.appendChild(msgDiv);
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+    </script>
+</body>
+</html>
